@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Logika Proposisi (Dinamis)</title>
+    <title>Kuis Logika Komputasional - Tugas Mandiri 1</title>
+    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -11,7 +12,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- MathJax for Dynamic LaTeX Rendering -->
+    <!-- MathJax Configuration -->
     <script>
         window.MathJax = {
             tex: {
@@ -19,7 +20,8 @@
                 displayMath: [['\\[', '\\]']]
             },
             startup: {
-                typeset: false // We will trigger typesetting manually after DOM updates
+                // We process math dynamically using MathJax.typesetPromise()
+                typeset: false 
             }
         };
     </script>
@@ -32,6 +34,11 @@
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         mono: ['Fira Code', 'monospace']
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                        }
                     }
                 }
             }
@@ -39,12 +46,16 @@
     </script>
     
     <style>
+        body {
+            background-color: #0f172a; 
+        }
         .custom-glass {
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
         .animate-pop {
-            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .animate-fade-in {
             animation: fadeIn 0.4s ease-out forwards;
@@ -54,174 +65,179 @@
             100% { transform: scale(1); opacity: 1; }
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Fix MathJax overflow on mobile */
         mjx-container {
             max-width: 100%;
             overflow-x: auto;
             overflow-y: hidden;
+            padding: 2px 0;
+        }
+        .math-block mjx-container {
+            margin: 0 !important;
+            text-align: left !important;
+        }
+        /* Custom Scrollbar for review section */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 min-h-screen font-sans text-slate-800 flex flex-col justify-between p-4 sm:p-6 selection:bg-indigo-500 selection:text-white">
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-850 min-h-screen font-sans text-slate-800 flex flex-col justify-between p-4 sm:p-6 selection:bg-indigo-500 selection:text-white relative">
 
+    <!-- Decorative Background Elements -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl"></div>
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/30 rounded-full blur-[100px]"></div>
+        <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
     </div>
 
-    <main class="relative z-10 max-w-2xl w-full mx-auto my-auto py-4">
+    <main class="relative z-10 max-w-3xl w-full mx-auto my-auto py-4">
         
         <!-- ================= START SCREEN ================= -->
-        <div id="start-screen" class="custom-glass rounded-3xl shadow-2xl p-6 sm:p-10 border border-white/20 text-center animate-pop">
-            <div class="w-20 h-20 bg-indigo-600/10 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-inner border border-indigo-200/50">
-                <i class="fa-solid fa-brain"></i>
+        <div id="start-screen" class="custom-glass rounded-[2rem] p-6 sm:p-12 border border-white/20 text-center animate-pop">
+            <div class="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner border border-indigo-100">
+                <i class="fa-solid fa-square-root-variable"></i>
             </div>
             
-            <span class="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider mb-3">Kuis Matematika & Logika</span>
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">Logika Proposisi</h1>
-            <!-- Fixed the unrendered LaTeX symbols by replacing them with Unicode characters -->
-            <p class="text-slate-600 mb-8 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
-                Uji pemahaman Anda mengenai Proposisi, Nilai Kebenaran, Negasi (¬), Konjungsi (∧), dan Disjungsi (∨).
+            <span class="inline-block px-4 py-1.5 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-widest mb-4">Tugas Mandiri 1</span>
+            <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Logika Komputasional</h1>
+            
+            <p class="text-slate-600 mb-8 max-w-lg mx-auto text-sm sm:text-base leading-relaxed">
+                Kuis interaktif ini menguji pemahaman Anda seputar proposisi atom, translasi kalimat, ekuivalensi, validitas, konsistensi himpunan formula, hingga presedens operator logika.
             </p>
             
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 text-left text-xs sm:text-sm">
-                <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/60 flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg flex-shrink-0">
-                        <i class="fa-solid fa-bolt"></i>
-                    </div>
-                    <div>
-                        <div class="text-slate-400 font-medium text-xs">Sistem Soal</div>
-                        <div class="text-slate-800 font-bold">10 Soal Dinamis</div>
-                    </div>
-                </div>
-                <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/60 flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center text-lg flex-shrink-0">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-left text-xs sm:text-sm">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl flex-shrink-0">
                         <i class="fa-solid fa-shuffle"></i>
                     </div>
                     <div>
-                        <div class="text-slate-400 font-medium text-xs">Variasi</div>
-                        <div class="text-slate-800 font-bold">Angka Diacak</div>
+                        <div class="text-slate-500 font-medium text-xs uppercase tracking-wider mb-0.5">Sistem Kuis</div>
+                        <div class="text-slate-800 font-bold text-base">8 Soal Dinamis & Acak</div>
                     </div>
                 </div>
-                <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/60 flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg flex-shrink-0">
-                        <i class="fa-solid fa-lightbulb"></i>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl flex-shrink-0">
+                        <i class="fa-solid fa-code"></i>
                     </div>
                     <div>
-                        <div class="text-slate-400 font-medium text-xs">Umpan Balik</div>
-                        <div class="text-slate-800 font-bold">Pembahasan Detail</div>
+                        <div class="text-slate-500 font-medium text-xs uppercase tracking-wider mb-0.5">Simbol Logika</div>
+                        <div class="text-slate-800 font-bold text-base">MathJax Render</div>
                     </div>
                 </div>
             </div>
 
-            <button onclick="startQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center justify-center space-x-2 text-base sm:text-lg">
-                <span>Mulai Kuis Sekarang</span>
-                <i class="fa-solid fa-arrow-right text-sm"></i>
+            <button onclick="startQuiz()" class="w-full sm:w-auto mx-auto bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-4 px-10 rounded-2xl shadow-xl shadow-indigo-600/30 transition-all duration-200 transform hover:-translate-y-1 flex items-center justify-center space-x-3 text-lg">
+                <span>Mulai Kuis</span>
+                <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
 
         <!-- ================= QUIZ SCREEN ================= -->
-        <div id="quiz-screen" class="hidden custom-glass rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 animate-pop">
+        <div id="quiz-screen" class="hidden custom-glass rounded-[2rem] shadow-2xl p-6 sm:p-10 border border-white/20 animate-pop">
             <!-- Header Info & Progress Bar -->
-            <div class="mb-6">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100">Logika Proposisi</span>
-                        <span class="text-xs font-semibold text-slate-500">Soal <span id="current-q-num" class="text-slate-900 font-bold">1</span> dari <span id="total-q-num">10</span></span>
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center font-bold text-lg border border-indigo-200" id="current-q-num">1</div>
+                        <span class="text-sm font-semibold text-slate-500 uppercase tracking-wider">dari <span id="total-q-num">8</span> Pertanyaan</span>
                     </div>
-                    <!-- Running Score Indicator -->
-                    <div class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 flex items-center space-x-1.5">
-                        <i class="fa-solid fa-trophy text-amber-500"></i>
-                        <span>Skor: <span id="running-score" class="text-indigo-600 font-mono text-sm">0</span></span>
+                    <div class="text-sm font-bold text-slate-700 bg-slate-100 px-4 py-2 rounded-xl border border-slate-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-pie text-indigo-500"></i>
+                        <span>Skor: <span id="running-score" class="text-indigo-700 font-mono text-base">0</span></span>
                     </div>
                 </div>
-
-                <!-- Progress Bar Container -->
-                <div class="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden">
-                    <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300 ease-out" style="width: 10%"></div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                    <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 10%"></div>
                 </div>
             </div>
 
             <!-- Question Box -->
-            <div class="mb-6">
-                <div id="question-text" class="text-lg sm:text-xl font-medium text-slate-800 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80 shadow-sm leading-relaxed overflow-x-auto">
+            <div class="mb-8">
+                <div id="question-text" class="text-lg sm:text-xl font-medium text-slate-800 bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm leading-relaxed math-block">
                     <!-- Dynamic Question text -->
                 </div>
             </div>
 
             <!-- Multiple Choice Options -->
-            <div id="options-container" class="space-y-3 mb-6">
+            <div id="options-container" class="space-y-3 mb-8">
                 <!-- Dynamic Options -->
             </div>
 
             <!-- Instant Explanation Panel -->
-            <div id="explanation-box" class="hidden mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50 animate-fade-in text-sm">
-                <div class="flex items-start space-x-3">
-                    <div id="explanation-icon" class="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-0.5 text-xs font-bold">
-                        <!-- Icon check or x -->
-                    </div>
-                    <div class="w-full overflow-x-auto">
-                        <div id="explanation-title" class="font-bold mb-1 text-slate-900"></div>
-                        <div id="explanation-text" class="text-slate-600 leading-relaxed text-xs sm:text-sm"></div>
+            <div id="explanation-box" class="hidden mb-8 p-5 rounded-2xl border animate-fade-in text-sm math-block shadow-sm">
+                <div class="flex items-start space-x-4">
+                    <div id="explanation-icon" class="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-0.5 text-sm font-bold shadow-sm"></div>
+                    <div class="w-full">
+                        <div id="explanation-title" class="font-bold text-base mb-1.5"></div>
+                        <div id="explanation-text" class="text-slate-700 leading-relaxed text-sm"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Navigation -->
-            <div class="flex justify-end">
-                <button id="next-btn" onclick="nextQuestion()" disabled class="opacity-50 cursor-not-allowed bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition duration-200 flex items-center space-x-2 text-sm sm:text-base">
-                    <span>Lanjut</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
+            <div class="flex justify-end pt-4 border-t border-slate-100">
+                <button id="next-btn" onclick="nextQuestion()" disabled class="opacity-50 cursor-not-allowed bg-slate-900 hover:bg-black text-white font-bold py-3.5 px-8 rounded-xl transition duration-200 flex items-center space-x-3 text-base">
+                    <span>Lanjutkan</span>
+                    <i class="fa-solid fa-arrow-right text-sm"></i>
                 </button>
             </div>
         </div>
 
         <!-- ================= EVALUATION SCREEN ================= -->
-        <div id="eval-screen" class="hidden custom-glass rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/20 animate-pop">
-            <div class="text-center mb-8">
-                <div id="score-badge" class="w-24 h-24 rounded-full flex flex-col items-center justify-center mx-auto mb-4 border-4 shadow-lg">
-                    <span id="final-score" class="text-3xl font-extrabold tracking-tight">0</span>
-                    <span class="text-[10px] font-bold uppercase tracking-widest opacity-80">Skor Total</span>
+        <div id="eval-screen" class="hidden custom-glass rounded-[2rem] shadow-2xl p-6 sm:p-10 border border-white/20 animate-pop">
+            <div class="text-center mb-10">
+                <div id="score-badge" class="w-28 h-28 rounded-full flex flex-col items-center justify-center mx-auto mb-5 border-4 shadow-xl">
+                    <span id="final-score" class="text-4xl font-extrabold tracking-tight">0</span>
+                    <span class="text-xs font-bold uppercase tracking-widest opacity-80 mt-1">Skor Total</span>
                 </div>
-                <h2 id="eval-heading" class="text-2xl font-bold text-slate-900 mb-1">Hasil Evaluasi</h2>
-                <p id="eval-message" class="text-slate-600 text-sm max-w-sm mx-auto"></p>
+                <h2 id="eval-heading" class="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Hasil Evaluasi</h2>
+                <p id="eval-message" class="text-slate-600 text-base max-w-md mx-auto leading-relaxed"></p>
             </div>
 
-            <!-- Review Items Section -->
-            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center justify-between pb-2 border-b border-slate-200">
                 <span>Rincian Pembahasan Soal</span>
-                <span id="eval-correct-count" class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-semibold border border-indigo-100">0 / 10 Benar</span>
+                <span id="eval-correct-count" class="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-bold">0 / 8 Benar</span>
             </h3>
 
-            <div class="space-y-4 mb-8 max-h-[360px] overflow-y-auto pr-1" id="review-container">
+            <div class="space-y-4 mb-10 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar" id="review-container">
                 <!-- Dynamic Review Items -->
             </div>
 
-            <button onclick="startQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-indigo-600/20 transition duration-200 flex items-center justify-center space-x-2 text-base">
-                <i class="fa-solid fa-rotate-right text-sm"></i>
-                <span>Ulangi Kuis (Soal Baru Diacak)</span>
+            <button onclick="startQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-4 px-6 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all duration-200 flex items-center justify-center space-x-3 text-lg">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Coba Lagi (Soal Baru & Acak)</span>
             </button>
         </div>
-
     </main>
 
-    <!-- Footer -->
-    <footer class="relative z-10 text-center text-slate-500 text-xs py-3 font-medium">
-        Kuis Logika Proposisi &copy; 2026 &bull; Dinamis & Otomatis
+    <footer class="relative z-10 text-center text-slate-500 text-sm py-4 font-medium">
+        &copy; 2026 &bull; Logika Komputasional - Tugas Mandiri 1
     </footer>
 
-    <!-- JS LOGIC -->
     <script>
-        // State Application
+        // State Variables
         let quizData = [];
         let currentQuestionIndex = 0;
         let score = 0;
         let userAnswers = [];
 
-        // Utilities
+        // Constants
+        const TOTAL_QUESTIONS = 8;
+        
+        // Utility: Array Shuffler
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -230,175 +246,238 @@
             return array;
         }
 
-        // --- QUESTION GENERATOR TEMPLATES ---
-
-        // Template 1: Arithmetic Truth Value
-        function genArithmeticProposition() {
-            const a = Math.floor(Math.random() * 20) + 1;
-            const b = Math.floor(Math.random() * 20) + 1;
-            // Using LaTeX \lt and \gt for safe rendering without conflicting with HTML tags
-            const ops = ['\\lt', '\\gt', '=', '\\ge', '\\le'];
-            const op = ops[Math.floor(Math.random() * ops.length)];
-            const c = a + b + Math.floor(Math.random() * 5) - 2; // Generated result close to actual sum
-
-            let isTrue = false;
-            if (op === '\\lt') isTrue = (a + b) < c;
-            else if (op === '\\gt') isTrue = (a + b) > c;
-            else if (op === '=') isTrue = (a + b) === c;
-            else if (op === '\\ge') isTrue = (a + b) >= c;
-            else if (op === '\\le') isTrue = (a + b) <= c;
-
-            let operatorText = op === '\\lt' ? '&lt;' : (op === '\\gt' ? '&gt;' : op);
-
-            const question = `Tentukan nilai kebenaran dari proposisi matematika berikut:<br><div class='text-center my-3 text-2xl font-mono font-bold text-indigo-700'>\\( ${a} + ${b} ${op} ${c} \\)</div>`;
-
-            const options = [
-                { text: "Benar (True)", isCorrect: isTrue },
-                { text: "Salah (False)", isCorrect: !isTrue }
+        // Utility: Randomize Variable Sets
+        function getRandomVars() {
+            const varSets = [
+                ['p', 'q', 'r', 's'],
+                ['a', 'b', 'c', 'd'],
+                ['x', 'y', 'z', 'w'],
+                ['A', 'B', 'C', 'D']
             ];
-
-            const explanation = `Hasil dari \\( ${a} + ${b} \\) adalah ${a+b}. Karena pernyataan matematis \\( ${a+b} ${op} ${c} \\) adalah <b>${isTrue ? 'BENAR' : 'SALAH'}</b>, maka nilai kebenaran proposisinya adalah ${isTrue ? 'Benar' : 'Salah'}.`;
-
-            return { question, options, explanation };
+            return varSets[Math.floor(Math.random() * varSets.length)];
         }
 
-        // Template 2: Identify Non-Propositions
-        function genNonProposition() {
-            const vars = ['x', 'y', 'n', 'k'];
-            const v = vars[Math.floor(Math.random() * vars.length)];
-            const val1 = Math.floor(Math.random() * 10) + 1;
-            const val2 = Math.floor(Math.random() * 20) + 10;
-            const openSentence = `\\( ${v} + ${val1} = ${val2} \\)`;
+        // Utility: Safely wrap LaTeX strings for MathJax processing.
+        // Double escaping is used here inherently by caller to prevent JS syntax crash.
+        function t(str) { return `\\( ${str} \\)`; }
 
-            const staticPropositions = [
-                "Ibukota provinsi Jawa Barat adalah Bandung.",
-                "Bumi merupakan planet berbentuk datar.",
-                "\\( 5 \\times 4 = 20 \\)",
-                "\\( 10 \\lt 3 \\)",
-                "Paus adalah mamalia laut.",
-                "Satu hari terdiri dari 24 jam."
-            ];
-            shuffleArray(staticPropositions);
-
-            const options = [
-                { text: openSentence, isCorrect: true },
-                { text: staticPropositions[0], isCorrect: false },
-                { text: staticPropositions[1], isCorrect: false },
-                { text: staticPropositions[2], isCorrect: false }
-            ];
-
+        // Topic 1: Atomic propositions.
+        function genAtomicPropositions() {
+            const vars = getRandomVars();
+            const p = vars[0], q = vars[1], r = vars[2];
+            
+            // Note: using double backslashes \\rightarrow, \\wedge, \\vee, \\neg, \\{, \\} to fix string parsing.
+            const question = `Diberikan formula logika majemuk: <div class="my-2 text-center text-xl text-indigo-700 font-bold">${t(`( ${p} \\wedge ${q} ) \\rightarrow ( \\neg ${r} \\vee ${p} )`)}</div> Tentukan manakah yang merupakan himpunan <b>proposisi atom</b> dari formula tersebut!`;
+            
             return {
-                question: "Manakah di antara kalimat-kalimat berikut yang BUKAN merupakan sebuah proposisi (pernyataan)?",
-                options: shuffleArray(options),
-                explanation: `Sebuah proposisi haruslah berupa kalimat deklaratif yang memiliki kepastian nilai (B atau S). Kalimat ${openSentence} merupakan <b>kalimat terbuka</b> karena kebenarannya masih bergantung pada nilai variabel bebas \\(${v}\\). Oleh karena itu, kalimat tersebut bukan proposisi.`
+                question: question,
+                options: shuffleArray([
+                    { text: t(`\\{ ${p}, ${q}, ${r} \\}`), isCorrect: true },
+                    { text: t(`\\{ ${p}, \\neg ${r} \\}`), isCorrect: false },
+                    { text: t(`\\{ ${p} \\wedge ${q}, \\neg ${r} \\vee ${p} \\}`), isCorrect: false },
+                    { text: t(`\\{ \\wedge, \\rightarrow, \\vee, \\neg \\}`), isCorrect: false }
+                ]),
+                explanation: `Proposisi atom adalah proposisi dasar yang tidak dapat dipecah lagi dengan operator logika. Operator logika seperti negasi (\\( \\neg \\)) akan membuat suatu proposisi menjadi majemuk. Variabel penyusun paling dasar pada formula di atas hanyalah <b>${p}, ${q}, dan ${r}</b>.`
             };
         }
 
-        // Helper for Template 3 & 4
-        function genMathFact() {
-            const a = Math.floor(Math.random() * 9) + 1;
-            const b = Math.floor(Math.random() * 9) + 1;
-            const isAddition = Math.random() > 0.5;
-            let c, isTrue = Math.random() > 0.5;
-
-            if (isAddition) {
-                c = isTrue ? (a + b) : (a + b + (Math.random() > 0.5 ? 1 : -1));
-                return { text: `\\( ${a} + ${b} = ${c} \\)`, isTrue: isTrue };
-            } else {
-                c = isTrue ? (a * b) : (a * b + (Math.random() > 0.5 ? 2 : -2));
-                return { text: `\\( ${a} \\times ${b} = ${c} \\)`, isTrue: isTrue };
-            }
-        }
-
-        // Template 3 & 4: Logic Operations
-        function genLogicOperation() {
-            const p = genMathFact();
-            const q = genMathFact();
-
-            const operations = [
-                { sym: '\\land', name: 'Konjungsi (Dan)', eval: (a, b) => a && b },
-                { sym: '\\lor', name: 'Disjungsi (Atau)', eval: (a, b) => a || b },
-                { sym: '\\rightarrow', name: 'Implikasi (Jika..Maka)', eval: (a, b) => !a || b },
-                { sym: '\\leftrightarrow', name: 'Biimplikasi (Jika dan hanya jika)', eval: (a, b) => a === b }
-            ];
-            const op = operations[Math.floor(Math.random() * operations.length)];
-
-            // Randomly negate propositons inside the expression
-            const negateP = Math.random() > 0.6;
-            const negateQ = Math.random() > 0.6;
-
-            const pTrue = negateP ? !p.isTrue : p.isTrue;
-            const qTrue = negateQ ? !q.isTrue : q.isTrue;
-
-            const finalTruth = op.eval(pTrue, qTrue);
-
-            const pSym = negateP ? '\\neg p' : 'p';
-            const qSym = negateQ ? '\\neg q' : 'q';
-            const expr = `\\( ${pSym} ${op.sym} ${qSym} \\)`;
-
-            const question = `Diberikan proposisi dasar:<br>
-            <div class="my-3 bg-slate-100 p-4 rounded-xl border border-slate-200 shadow-inner space-y-1">
-                <div><b>p</b> : ${p.text}</div>
-                <div><b>q</b> : ${q.text}</div>
-            </div>
-            Tentukan nilai kebenaran dari ekspresi logika majemuk: <div class='text-center mt-3 mb-1 text-2xl font-mono font-bold text-indigo-700'>${expr}</div>`;
-
-            const options = [
-                { text: "Benar (True)", isCorrect: finalTruth },
-                { text: "Salah (False)", isCorrect: !finalTruth }
-            ];
-
-            const explanation = `
-                Langkah evaluasi:<br>
-                1. Proposisi p bernilai <b>${p.isTrue ? 'BENAR' : 'SALAH'}</b>. ${negateP ? 'Maka \\( \\neg p \\) berbalik menjadi <b>' + (pTrue?'BENAR':'SALAH') + '</b>.' : ''}<br>
-                2. Proposisi q bernilai <b>${q.isTrue ? 'BENAR' : 'SALAH'}</b>. ${negateQ ? 'Maka \\( \\neg q \\) berbalik menjadi <b>' + (qTrue?'BENAR':'SALAH') + '</b>.' : ''}<br>
-                3. Operasi ${op.name} (${op.sym}) antara <b>${pTrue ? 'BENAR' : 'SALAH'}</b> dan <b>${qTrue ? 'BENAR' : 'SALAH'}</b> menghasilkan kesimpulan akhir <b>${finalTruth ? 'BENAR' : 'SALAH'}</b>.
+        // Topic 2: Creating logical formulas
+        function genTranslation() {
+            const vars = getRandomVars();
+            const isAndFirst = Math.random() > 0.5;
+            
+            const op1Word = isAndFirst ? "dan" : "atau";
+            const op2Word = isAndFirst ? "atau" : "dan";
+            // Double escaping applied
+            const op1Sym = isAndFirst ? "\\\\wedge" : "\\\\vee";
+            const op2Sym = isAndFirst ? "\\\\vee" : "\\\\wedge";
+            
+            const p = vars[0], q = vars[1], r = vars[2], s = vars[3];
+            
+            const question = `
+                Diberikan pernyataan berikut: <br>
+                <div class="mt-3 p-4 bg-white rounded-xl border border-slate-200 text-slate-700 italic">
+                "Jika mahasiswa mengerjakan tugas <b>${op1Word}</b> memahami materi, maka mahasiswa dapat menyelesaikan program <b>${op2Word}</b> meminta bantuan."
+                </div><br>
+                Misalkan:<br> <b>${p}</b> = mengerjakan tugas, <b>${q}</b> = memahami materi, <b>${r}</b> = menyelesaikan program, <b>${s}</b> = meminta bantuan.<br><br>
+                Berdasarkan permisalan di atas, tuliskan formula logika proposisi yang tepat!
             `;
+            
+            const correctAns = t(`(${p} ${op1Sym} ${q}) \\rightarrow (${r} ${op2Sym} ${s})`);
+            const wrong1 = t(`(${p} ${op2Sym} ${q}) \\rightarrow (${r} ${op1Sym} ${s})`);
+            const wrong2 = t(`${p} ${op1Sym} (${q} \\rightarrow ${r}) ${op2Sym} ${s}`);
+            const wrong3 = t(`(${p} \\rightarrow ${q}) ${op1Sym} (${r} \\rightarrow ${s})`);
 
-            return { question, options, explanation };
+            return {
+                question: question,
+                options: shuffleArray([
+                    { text: correctAns, isCorrect: true },
+                    { text: wrong1, isCorrect: false },
+                    { text: wrong2, isCorrect: false },
+                    { text: wrong3, isCorrect: false }
+                ]),
+                explanation: `Pernyataan utama berbentuk implikasi "Jika A maka B" (\\( \\rightarrow \\)).<br>
+                Kondisi pertama (A) adalah "${p} ${op1Word} ${q}" ditulis sebagai \\( (${p} ${op1Sym} ${q}) \\).<br>
+                Kondisi kedua (B) adalah "${r} ${op2Word} ${s}" ditulis sebagai \\( (${r} ${op2Sym} ${s}) \\).<br>
+                Digabungkan menjadi <b>${correctAns}</b>.`
+            };
         }
 
-        // Template 5: Static Theoretical Questions
-        function genStaticTheory() {
-            const theories = [
-                {
-                    q: "Manakah negasi (ingkaran) yang tepat dari proposisi kuantifikasi universal: <b>'Semua mahasiswa lulus ujian'</b>?",
-                    o: [
-                        { text: "Ada/Beberapa mahasiswa yang tidak lulus ujian", isCorrect: true },
-                        { text: "Tidak ada mahasiswa yang lulus ujian", isCorrect: false },
-                        { text: "Semua mahasiswa tidak lulus ujian", isCorrect: false },
-                        { text: "Beberapa mahasiswa lulus ujian", isCorrect: false }
-                    ],
-                    e: "Berdasarkan Hukum De Morgan untuk kuantor, negasi dari kuantor universal (\\(\\forall\\) / 'Semua') adalah kuantor eksistensial (\\(\\exists\\) / 'Beberapa' atau 'Ada') yang diikuti oleh negasi sifat/predikatnya. Jadi negasinya adalah 'Ada mahasiswa yang TIDAK lulus ujian'."
-                },
-                {
-                    q: "Suatu implikasi bersyarat \\( p \\rightarrow q \\) akan bernilai <b>SALAH</b> tepat pada satu kondisi khusus, yaitu apabila...",
-                    o: [
-                        { text: "p bernilai benar dan q bernilai salah", isCorrect: true },
-                        { text: "p bernilai benar dan q bernilai benar", isCorrect: false },
-                        { text: "p bernilai salah dan q bernilai benar", isCorrect: false },
-                        { text: "p dan q keduanya bernilai salah", isCorrect: false }
-                    ],
-                    e: "Tabel kebenaran Implikasi (\\( p \\rightarrow q \\)) menyatakan bahwa ekspresi ini HANYA bernilai SALAH jika anteseden/premis (p) BENAR, namun konsekuen/kesimpulan (q) SALAH. Semua kemungkinan lainnya bernilai BENAR."
-                }
-            ];
-            const t = theories[Math.floor(Math.random() * theories.length)];
+        // Topic 3: Evaluating a formula's validity
+        function genValidity() {
+            const vars = getRandomVars();
+            const p = vars[0], q = vars[1];
+            
+            const question = `Berdasarkan pengujian tabel kebenaran, tentukan sifat validitas (absah) dari formula Modus Ponens berikut: 
+            <div class="my-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-center text-xl text-indigo-700 font-bold">
+            ${t(`(( ${p} \\rightarrow ${q} ) \\wedge ${p} ) \\rightarrow ${q}`)}
+            </div>`;
+            
             return {
-                question: t.q,
-                options: shuffleArray([...t.o]),
-                explanation: t.e
+                question: question,
+                options: shuffleArray([
+                    { text: "Tautologi (Valid / Absah)", isCorrect: true },
+                    { text: "Kontradiksi (Unsatisfiable)", isCorrect: false },
+                    { text: "Contingency (Satisfiable tetapi tidak valid)", isCorrect: false },
+                    { text: "Hanya bernilai benar jika " + p + " salah", isCorrect: false }
+                ]),
+                explanation: `Formula Modus Ponens <b>${t(`(( ${p} \\rightarrow ${q} ) \\wedge ${p} ) \\rightarrow ${q}`)}</b> selalu menghasilkan nilai <b>Benar (True)</b> pada kolom kesimpulan akhir untuk segala kombinasi nilai ${p} dan ${q}. Oleh karena itu, formula ini diklasifikasikan sebagai <b>Tautologi</b> yang berarti argumennya Absah/Valid mutlak.`
+            };
+        }
+
+        // Topic 4: Consistency of a set of formulas
+        function genConsistency() {
+            const vars = getRandomVars();
+            const p = vars[0], q = vars[1];
+            
+            const question = `Diberikan kumpulan formula (himpunan premis) berikut: 
+            <div class="my-3 text-center text-xl font-mono text-indigo-700 font-bold">
+            ${t(`\\{ ${p} \\rightarrow ${q}, ${p}, \\neg ${q} \\}`)}
+            </div>
+            Apakah kumpulan formula tersebut <b>konsisten</b> (satisfiable)?`;
+            
+            return {
+                question: question,
+                options: shuffleArray([
+                    { text: "Tidak Konsisten (Kontradiksi)", isCorrect: true },
+                    { text: "Konsisten (Satisfiable)", isCorrect: false },
+                    { text: `Konsisten jika hanya ${q} bernilai Benar`, isCorrect: false },
+                    { text: `Konsisten jika ${p} bernilai Salah`, isCorrect: false }
+                ]),
+                explanation: `Kumpulan formula disebut konsisten jika ada minimal 1 interpretasi di mana SEMUA elemen bernilai Benar bersamaan.<br>
+                1. Agar ${t(`${p}`)} benar, maka ${p} = True.<br>
+                2. Agar ${t(`\\neg ${q}`)} benar, maka ${q} = False.<br>
+                3. Berdasarkan 1 dan 2, formula ${t(`${p} \\rightarrow ${q}`)} akan bernilai <b>False</b> (karena True \\( \\rightarrow \\) False bernilai False).<br>
+                Karena semua formula tidak dapat bernilai benar sekaligus, maka himpunan ini <b>Tidak Konsisten</b>.`
+            };
+        }
+
+        // Topic 5: Schema instantiation
+        function genSchema() {
+            const vars = getRandomVars();
+            const p = vars[0], q = vars[1];
+            
+            const schemaStr = t(`(A \\wedge B) \\rightarrow A`);
+            const correctFormula = t(`(${p} \\wedge ${q}) \\rightarrow ${p}`);
+            const wrongFormula1 = t(`(${p} \\wedge ${q}) \\rightarrow ${q}`);
+            const wrongFormula2 = t(`(${p} \\rightarrow ${q}) \\wedge ${p}`);
+
+            const question = `Diberikan skema formula (metalogika): <b class="text-indigo-700 text-lg mx-2">${schemaStr}</b> <br><br>Manakah dari formula berikut yang merupakan <b>instansiasi</b> yang valid dari skema tersebut?`;
+            
+            return {
+                question: question,
+                options: shuffleArray([
+                    { text: correctFormula, isCorrect: true },
+                    { text: wrongFormula1, isCorrect: false },
+                    { text: wrongFormula2, isCorrect: false },
+                    { text: t(`A \\rightarrow (A \\wedge B)`), isCorrect: false }
+                ]),
+                explanation: `Skema formula berfungsi sebagai 'cetakan' abstrak. Jika kita mengganti (substitusi) variabel skema <b>A</b> dengan proposisi ${t(`${p}`)} dan variabel <b>B</b> dengan ${t(`${q}`)}, maka bentuk ${schemaStr} persis berubah letaknya menjadi struktur <b>${correctFormula}</b>.`
+            };
+        }
+
+        // Topic 6: Logical equivalence
+        function genEquivalence() {
+            const vars = getRandomVars();
+            const p = vars[0], q = vars[1], r = vars[2];
+            
+            const question = `Berdasarkan hukum distributif implikasi (Ekuivalensi Logika), formula <b class="text-indigo-700 text-lg mx-1">${t(`${p} \\rightarrow (${q} \\wedge ${r})`)}</b> setara (ekuivalen) dengan ...`;
+            
+            const correctAns = t(`(${p} \\rightarrow ${q}) \\wedge (${p} \\rightarrow ${r})`);
+            const wrong1 = t(`(${p} \\rightarrow ${q}) \\vee (${p} \\rightarrow ${r})`);
+            const wrong2 = t(`(${p} \\wedge ${q}) \\rightarrow (${p} \\wedge ${r})`);
+            const wrong3 = t(`(${q} \\rightarrow ${p}) \\wedge (${r} \\rightarrow ${p})`);
+            
+            return {
+                question: question,
+                options: shuffleArray([
+                    { text: correctAns, isCorrect: true },
+                    { text: wrong1, isCorrect: false },
+                    { text: wrong2, isCorrect: false },
+                    { text: wrong3, isCorrect: false }
+                ]),
+                explanation: `Berdasarkan sifat distributif implikasi terhadap konjungsi (\\( \\wedge \\)), operator utama pemisah tetap dipertahankan. Oleh karena itu, ${t(`${p} \\rightarrow (${q} \\wedge ${r})`)} terdistribusi menjadi <b>${correctAns}</b>. (Keduanya memiliki keluaran tabel kebenaran yang sama identik).`
+            };
+        }
+
+        // Topic 7: Identifying Compound propositions
+        function genCompound() {
+            const vars = getRandomVars();
+            const p = vars[0], q = vars[1], r = vars[2];
+            
+            const question = `Diberikan formula logika: <div class="my-2 text-center text-xl text-indigo-700 font-bold">${t(`${p} \\rightarrow ( ${q} \\wedge ${r} )`)}</div> Jelaskan mengapa formula ini diklasifikasikan sebagai <b>proposisi majemuk</b>.`;
+            
+            return {
+                question: question,
+                options: shuffleArray([
+                    { text: "Karena formula tersebut terdiri dari beberapa proposisi atom yang digabungkan menggunakan operator logika.", isCorrect: true },
+                    { text: "Karena formula tersebut pasti selalu menghasilkan nilai kebenaran mutlak (tautologi).", isCorrect: false },
+                    { text: "Karena formula tersebut tidak dapat ditentukan nilai kebenarannya secara empiris.", isCorrect: false },
+                    { text: "Karena formula tersebut hanya mendeskripsikan satu subjek dasar yang mandiri.", isCorrect: false }
+                ]),
+                explanation: `Proposisi majemuk (compound proposition) didefinisikan sebagai kombinasi dari satu atau lebih proposisi atom (seperti ${p}, ${q}, ${r}) yang saling dikaitkan dengan menggunakan penghubung/operator logika seperti Implikasi (\\( \\rightarrow \\)) dan Konjungsi (\\( \\wedge \\)).`
+            };
+        }
+
+        // Topic 8: Identifying main operator precedence
+        function genPrecedence() {
+            const vars = getRandomVars();
+            const p = vars[0], q = vars[1], r = vars[2];
+            
+            const question = `Diberikan formula abstrak tanpa tanda kurung: <div class="my-2 text-center text-xl text-indigo-700 font-bold">${t(`${p} \\rightarrow ${q} \\wedge ${r}`)}</div>
+            Berdasarkan hirarki/presedens standar operator logika, Konjungsi (\\( \\wedge \\)) lebih kuat dibandingkan Implikasi (\\( \\rightarrow \\)). Manakah letak tanda kurung yang benar untuk menunjukkan urutan pengerjaannya?`;
+            
+            return {
+                question: question,
+                options: shuffleArray([
+                    { text: t(`${p} \\rightarrow (${q} \\wedge ${r})`), isCorrect: true },
+                    { text: t(`(${p} \\rightarrow ${q}) \\wedge ${r}`), isCorrect: false },
+                    { text: t(`(${p} \\rightarrow ${q} \\wedge ${r})`), isCorrect: false },
+                    { text: t(`( \\neg ${p} \\vee ${q} ) \\wedge ${r}`), isCorrect: false }
+                ]),
+                explanation: `Karena operator Konjungsi (\\( \\wedge \\)) mengikat lebih kuat (memiliki prioritas tinggi) daripada Implikasi (\\( \\rightarrow \\)), operasi konjungsi \\( ${q} \\wedge ${r} \\) harus dievaluasi dan dikurung terlebih dahulu. Sehingga struktur aslinya adalah <b>${t(`${p} \\rightarrow (${q} \\wedge ${r})`)}</b>.`
             };
         }
 
         function generateQuizEngine() {
             quizData = [];
-            // Dynamically generate exactly 10 questions using the templates
-            for (let i = 0; i < 3; i++) quizData.push(genArithmeticProposition());
-            for (let i = 0; i < 2; i++) quizData.push(genNonProposition());
-            for (let i = 0; i < 4; i++) quizData.push(genLogicOperation());
-            for (let i = 0; i < 1; i++) quizData.push(genStaticTheory());
-
-            // Shuffle the generated array of questions
+            // Call exactly 8 unique generators based on requirements
+            const generators = [
+                genAtomicPropositions,
+                genTranslation,
+                genValidity,
+                genConsistency,
+                genSchema,
+                genEquivalence,
+                genCompound,
+                genPrecedence
+            ];
+            
+            generators.forEach(gen => {
+                quizData.push(gen());
+            });
+            
+            // Randomize the order of the 8 questions
             shuffleArray(quizData);
         }
 
@@ -409,13 +488,13 @@
         }
 
         function startQuiz() {
-            // Generate a fresh set of questions every time the quiz starts
-            generateQuizEngine();
+            generateQuizEngine(); // Build 8 randomized questions
 
             currentQuestionIndex = 0;
             score = 0;
             userAnswers = [];
 
+            // UI Transitions
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('eval-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
@@ -426,45 +505,46 @@
         function renderQuestion() {
             const currentQ = quizData[currentQuestionIndex];
 
-            // Header updates
+            // Update Progress & Headers
             document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
-            document.getElementById('total-q-num').innerText = quizData.length;
+            document.getElementById('total-q-num').innerText = TOTAL_QUESTIONS;
             document.getElementById('running-score').innerText = score;
 
-            // Progress bar
-            const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+            const progressPercent = (currentQuestionIndex / TOTAL_QUESTIONS) * 100;
             document.getElementById('progress-bar').style.width = `${progressPercent}%`;
 
-            // Question text
+            // Inject Question HTML
             document.getElementById('question-text').innerHTML = currentQ.question;
 
-            // Render options
+            // Generate Option Buttons
             const optionsContainer = document.getElementById('options-container');
             optionsContainer.innerHTML = '';
 
             currentQ.options.forEach((opt, index) => {
                 const button = document.createElement('button');
-                button.className = `option-btn w-full text-left p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50 transition duration-200 flex items-start space-x-3 shadow-sm group`;
+                button.className = `option-btn w-full text-left p-4 sm:p-5 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50/50 transition duration-200 flex items-center space-x-4 shadow-sm group relative overflow-hidden`;
                 button.onclick = () => selectOption(index, opt.isCorrect);
                 
-                const letter = String.fromCharCode(65 + index);
+                const letter = String.fromCharCode(65 + index); // A, B, C, D
 
                 button.innerHTML = `
-                    <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-semibold text-xs flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 group-hover:text-indigo-700 transition">
+                    <span class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors z-10">
                         ${letter}
                     </span>
-                    <span class="text-sm sm:text-base font-medium text-slate-800 leading-snug pt-0.5">${opt.text}</span>
+                    <span class="text-base font-medium text-slate-800 leading-snug z-10 w-full math-block flex items-center min-h-[32px]">${opt.text}</span>
                 `;
                 optionsContainer.appendChild(button);
             });
 
-            // Reset Explanation box & Next Button
+            // Reset UI states
             document.getElementById('explanation-box').classList.add('hidden');
             const nextBtn = document.getElementById('next-btn');
             nextBtn.disabled = true;
+            nextBtn.classList.replace('bg-indigo-600', 'bg-slate-900');
+            nextBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-black');
             nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
-            // Render LaTeX mathematically
+            // Explicitly force MathJax to typeset the newly injected LaTeX variables
             triggerMathJax();
         }
 
@@ -472,21 +552,20 @@
             const currentQ = quizData[currentQuestionIndex];
             const optionButtons = document.querySelectorAll('.option-btn');
 
-            // Disable all option buttons
+            // Lock input
             optionButtons.forEach(btn => {
                 btn.disabled = true;
-                btn.classList.remove('hover:border-indigo-300', 'hover:bg-slate-50');
+                btn.classList.remove('hover:border-indigo-400', 'hover:bg-indigo-50/50');
             });
 
             if (isCorrect) {
-                score += 10;
-                document.getElementById('running-score').innerText = score;
+                score += (100 / TOTAL_QUESTIONS);
+                document.getElementById('running-score').innerText = Math.round(score);
             }
 
-            // Find the correct option index for storing review info
-            let correctIndex = currentQ.options.findIndex(o => o.isCorrect === true);
+            const correctIndex = currentQ.options.findIndex(o => o.isCorrect === true);
 
-            // Record user response
+            // Log user result for final review
             userAnswers.push({
                 question: currentQ.question,
                 selectedText: currentQ.options[selectedIndex].text,
@@ -495,28 +574,32 @@
                 explanation: currentQ.explanation
             });
 
-            // Highlight chosen & correct options visually
+            // Colorize Buttons based on correctness
             optionButtons.forEach((btn, idx) => {
+                const labelSpan = btn.querySelector('span');
+                
                 if (idx === correctIndex) {
                     btn.classList.remove('border-slate-200', 'bg-white');
-                    btn.classList.add('border-emerald-500', 'bg-emerald-50/80', 'text-emerald-900');
-                    btn.querySelector('span').classList.add('bg-emerald-500', 'text-white');
-                }
-                
-                if (idx === selectedIndex && !isCorrect) {
+                    btn.classList.add('border-emerald-500', 'bg-emerald-50');
+                    labelSpan.className = 'w-8 h-8 rounded-xl bg-emerald-500 text-white font-bold text-sm flex items-center justify-center flex-shrink-0 z-10 border border-emerald-600';
+                } else if (idx === selectedIndex && !isCorrect) {
                     btn.classList.remove('border-slate-200', 'bg-white');
-                    btn.classList.add('border-rose-500', 'bg-rose-50/80', 'text-rose-900');
-                    btn.querySelector('span').classList.add('bg-rose-500', 'text-white');
+                    btn.classList.add('border-rose-500', 'bg-rose-50');
+                    labelSpan.className = 'w-8 h-8 rounded-xl bg-rose-500 text-white font-bold text-sm flex items-center justify-center flex-shrink-0 z-10 border border-rose-600';
+                } else {
+                    btn.classList.add('opacity-40');
                 }
             });
 
             showExplanation(isCorrect, currentQ.explanation);
 
-            // Enable Next Button
+            // Unlock and stylize the Next Button
             const nextBtn = document.getElementById('next-btn');
             nextBtn.disabled = false;
-            nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            nextBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-900', 'hover:bg-black');
+            nextBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
             
+            // Typeset LaTeX inside the explanation box
             triggerMathJax();
         }
 
@@ -526,20 +609,20 @@
             const title = document.getElementById('explanation-title');
             const text = document.getElementById('explanation-text');
 
-            box.classList.remove('hidden', 'border-emerald-200', 'bg-emerald-50/50', 'border-rose-200', 'bg-rose-50/50');
+            box.classList.remove('hidden', 'border-emerald-200', 'bg-emerald-50', 'border-rose-200', 'bg-rose-50');
 
             if (isCorrect) {
-                box.classList.add('border-emerald-200', 'bg-emerald-50/50');
-                icon.className = 'w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-0.5 text-xs font-bold bg-emerald-500';
+                box.classList.add('border-emerald-200', 'bg-emerald-50');
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-0.5 text-sm font-bold bg-emerald-500 shadow-sm shadow-emerald-500/40';
                 icon.innerHTML = '<i class="fa-solid fa-check"></i>';
-                title.className = 'font-bold mb-0.5 text-emerald-900';
-                title.innerText = 'Jawaban Anda Benar!';
+                title.className = 'font-bold text-base mb-1 text-emerald-900';
+                title.innerText = 'Jawaban Tepat!';
             } else {
-                box.classList.add('border-rose-200', 'bg-rose-50/50');
-                icon.className = 'w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-0.5 text-xs font-bold bg-rose-500';
+                box.classList.add('border-rose-200', 'bg-rose-50');
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-0.5 text-sm font-bold bg-rose-500 shadow-sm shadow-rose-500/40';
                 icon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-                title.className = 'font-bold mb-0.5 text-rose-900';
-                title.innerText = 'Jawaban Belum Tepat';
+                title.className = 'font-bold text-base mb-1 text-rose-900';
+                title.innerText = 'Jawaban Kurang Tepat';
             }
 
             text.innerHTML = explanationText;
@@ -547,12 +630,11 @@
 
         function nextQuestion() {
             currentQuestionIndex++;
-            if (currentQuestionIndex < quizData.length) {
+            if (currentQuestionIndex < TOTAL_QUESTIONS) {
                 renderQuestion();
             } else {
-                // Ensure progress bar fills to 100% on completion
                 document.getElementById('progress-bar').style.width = `100%`;
-                setTimeout(showEvaluation, 300);
+                setTimeout(showEvaluation, 400); // Small delay to animate full progress bar
             }
         }
 
@@ -561,79 +643,74 @@
             document.getElementById('eval-screen').classList.remove('hidden');
 
             const correctAnswersCount = userAnswers.filter(a => a.isCorrect).length;
-            const percentage = Math.round((correctAnswersCount / quizData.length) * 100);
+            const finalScore = Math.round(score);
 
-            // Update badge & headings
+            document.getElementById('final-score').innerText = finalScore;
+            document.getElementById('eval-correct-count').innerText = `${correctAnswersCount} / ${TOTAL_QUESTIONS} Benar`;
+
             const scoreBadge = document.getElementById('score-badge');
-            document.getElementById('final-score').innerText = `${percentage}%`;
-            document.getElementById('eval-correct-count').innerText = `${correctAnswersCount} / ${quizData.length} Benar`;
-
             const evalHeading = document.getElementById('eval-heading');
             const evalMessage = document.getElementById('eval-message');
 
-            if (percentage === 100) {
-                scoreBadge.className = 'w-24 h-24 rounded-full flex flex-col items-center justify-center mx-auto mb-4 border-4 border-emerald-500 bg-emerald-50 text-emerald-600 shadow-lg shadow-emerald-500/20';
+            if (finalScore === 100) {
+                scoreBadge.className = 'w-28 h-28 rounded-full flex flex-col items-center justify-center mx-auto mb-5 border-4 border-emerald-500 bg-emerald-50 text-emerald-600 shadow-xl shadow-emerald-500/30';
                 evalHeading.innerText = 'Sempurna!';
-                evalMessage.innerText = 'Luar biasa! Anda telah menguasai konsep Logika Proposisi dengan sangat baik.';
-            } else if (percentage >= 70) {
-                scoreBadge.className = 'w-24 h-24 rounded-full flex flex-col items-center justify-center mx-auto mb-4 border-4 border-indigo-500 bg-indigo-50 text-indigo-600 shadow-lg shadow-indigo-500/20';
+                evalMessage.innerText = 'Anda memahami pondasi Logika Komputasional dengan luar biasa.';
+            } else if (finalScore >= 70) {
+                scoreBadge.className = 'w-28 h-28 rounded-full flex flex-col items-center justify-center mx-auto mb-5 border-4 border-indigo-500 bg-indigo-50 text-indigo-600 shadow-xl shadow-indigo-500/30';
                 evalHeading.innerText = 'Kerja Bagus!';
-                evalMessage.innerText = 'Pemahaman logika Anda sudah cukup matang. Tinjau pembahasan untuk soal yang belum tepat.';
+                evalMessage.innerText = 'Pemahaman logika Anda sudah baik. Review kembali detail presedens dan ekuivalensi.';
             } else {
-                scoreBadge.className = 'w-24 h-24 rounded-full flex flex-col items-center justify-center mx-auto mb-4 border-4 border-amber-500 bg-amber-50 text-amber-600 shadow-lg shadow-amber-500/20';
-                evalHeading.innerText = 'Perlu Latihan Lagi';
-                evalMessage.innerText = 'Jangan berkecil hati! Pelajari pembahasan di bawah ini lalu coba ulangi kuis.';
+                scoreBadge.className = 'w-28 h-28 rounded-full flex flex-col items-center justify-center mx-auto mb-5 border-4 border-rose-500 bg-rose-50 text-rose-600 shadow-xl shadow-rose-500/30';
+                evalHeading.innerText = 'Teruslah Berlatih!';
+                evalMessage.innerText = 'Pelajari pembahasan soal di bawah ini untuk memperkuat pemahaman analisis logika Anda.';
             }
 
-            // Populate Review Items
             const reviewContainer = document.getElementById('review-container');
             reviewContainer.innerHTML = '';
 
             userAnswers.forEach((item, index) => {
                 const card = document.createElement('div');
-                card.className = `p-4 rounded-2xl border text-left text-xs sm:text-sm ${
-                    item.isCorrect 
-                        ? 'bg-emerald-50/40 border-emerald-200' 
-                        : 'bg-rose-50/40 border-rose-200'
+                card.className = `p-5 rounded-2xl border text-left text-sm ${
+                    item.isCorrect ? 'bg-emerald-50/40 border-emerald-200' : 'bg-rose-50/40 border-rose-200'
                 }`;
 
                 card.innerHTML = `
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-slate-700">Soal #${index + 1}</span>
-                        <span class="font-bold px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs ${
-                            item.isCorrect 
-                                ? 'bg-emerald-100 text-emerald-800' 
-                                : 'bg-rose-100 text-rose-800'
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-bold text-slate-800 text-base">Pertanyaan ${index + 1}</span>
+                        <span class="font-bold px-3 py-1 rounded-full text-xs uppercase tracking-wider ${
+                            item.isCorrect ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'
                         }">
-                            <i class="fa-solid ${item.isCorrect ? 'fa-check' : 'fa-xmark'} mr-1"></i>
+                            <i class="fa-solid ${item.isCorrect ? 'fa-check' : 'fa-xmark'} mr-1.5"></i>
                             ${item.isCorrect ? 'Benar' : 'Salah'}
                         </span>
                     </div>
 
-                    <div class="font-medium text-slate-800 mb-3 overflow-x-auto">${item.question}</div>
+                    <div class="font-medium text-slate-800 mb-4 bg-white/70 p-4 rounded-xl border border-white math-block">${item.question}</div>
 
-                    <div class="space-y-1.5 mb-3">
-                        <div class="p-2.5 rounded-lg bg-white/80 border border-slate-200/80">
-                            <span class="text-slate-400 block text-[11px] mb-1">Jawaban Anda:</span>
-                            <span class="font-semibold ${item.isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${item.selectedText}</span>
+                    <div class="space-y-2 mb-4">
+                        <div class="p-3 rounded-xl bg-white border border-slate-200 shadow-sm math-block flex flex-col">
+                            <span class="text-slate-400 font-semibold text-xs mb-1 uppercase tracking-wider">Jawaban Anda</span>
+                            <span class="${item.isCorrect ? 'text-emerald-700 font-bold' : 'text-rose-700 font-semibold'}">${item.selectedText}</span>
                         </div>
                         ${!item.isCorrect ? `
-                        <div class="p-2.5 rounded-lg bg-white/80 border border-slate-200/80">
-                            <span class="text-slate-400 block text-[11px] mb-1">Kunci Jawaban:</span>
-                            <span class="font-semibold text-emerald-700">${item.correctText}</span>
+                        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100 shadow-sm math-block flex flex-col">
+                            <span class="text-emerald-600/70 font-semibold text-xs mb-1 uppercase tracking-wider">Jawaban Benar</span>
+                            <span class="font-bold text-emerald-800">${item.correctText}</span>
                         </div>
                         ` : ''}
                     </div>
 
-                    <div class="p-3 rounded-lg bg-white/60 border border-slate-200/60 text-slate-600 text-xs sm:text-sm overflow-x-auto">
-                        <span class="font-bold text-slate-700 block mb-1">Pembahasan:</span> ${item.explanation}
+                    <div class="p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-slate-700 text-sm math-block shadow-inner">
+                        <span class="font-bold text-slate-900 block mb-1">Pembahasan:</span> ${item.explanation}
                     </div>
                 `;
 
                 reviewContainer.appendChild(card);
             });
             
-            triggerMathJax(); // Trigger MathJax to typeset the evaluation descriptions
+            // Typeset the entire review container block
+            triggerMathJax();
         }
     </script>
 </body>
